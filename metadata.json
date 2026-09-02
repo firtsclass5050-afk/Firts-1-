@@ -1,0 +1,6 @@
+{
+  "name": "First Classe Institute",
+  "description": "Plataforma de gestión para el instituto de inglés First Classe, con módulos para dirección y profesores.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

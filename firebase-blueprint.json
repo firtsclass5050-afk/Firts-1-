@@ -1,0 +1,342 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role-based access control and registration details.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "teacher", "student", "master", "pending"] },
+        "photoURL": { "type": "string" },
+        "ci": { "type": "string" },
+        "birthDate": { "type": "string" },
+        "phoneNumber": { "type": "string" },
+        "requestedRole": { "type": "string", "enum": ["teacher", "admin"] },
+        "status": { "type": "string", "enum": ["pending", "active", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "English course details.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "level": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "schedule": { "type": "string" },
+        "studentIds": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["name", "level", "teacherId"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "Institute announcements.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "authorId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "targetRole": { "type": "string", "enum": ["all", "teacher", "student"] }
+      },
+      "required": ["title", "content", "authorId", "createdAt"]
+    },
+    "Enrollment": {
+      "title": "Enrollment",
+      "description": "Student enrollment record.",
+      "type": "object",
+      "properties": {
+        "studentCode": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "birthDate": { "type": "string" },
+        "isAdult": { "type": "boolean" },
+        "idCard": { "type": "string" },
+        "issuedIn": { "type": "string" },
+        "occupation": { "type": "string" },
+        "educationLevel": { "type": "string" },
+        "cellphone": { "type": "string" },
+        "address": { "type": "string" },
+        "studentEmail": { "type": "string" },
+        "shift": { "type": "string" },
+        "modality": { "type": "string" },
+        "level": { "type": "string" },
+        "course": { "type": "string" },
+        "isPromotion": { "type": "boolean" },
+        "amount": { "type": "number" },
+        "advancePayment": { "type": "string" },
+        "branch": { "type": "string" },
+        "referralSource": { "type": "string" },
+        "statusId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["studentCode", "firstName", "lastName", "birthDate", "idCard", "issuedIn", "cellphone", "address", "shift", "modality", "level", "course", "amount", "branch", "createdAt", "createdBy"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Student payment record.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "year": { "type": "string" },
+        "monthToPay": { "type": "string" },
+        "monthlyAmount": { "type": "number" },
+        "monthsInAdvance": { "type": "number" },
+        "plannedPaymentDate": { "type": "string" },
+        "taxId": { "type": "string" },
+        "authorizationNumber": { "type": "string" },
+        "taxName": { "type": "string" },
+        "receiptNumber": { "type": "string" },
+        "totalToPay": { "type": "number" },
+        "amountReceived": { "type": "number" },
+        "change": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["studentId", "studentName", "year", "monthToPay", "monthlyAmount", "receiptNumber", "totalToPay", "amountReceived", "createdAt", "createdBy"]
+    },
+    "Book": {
+      "title": "Book",
+      "description": "Book inventory item.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "price": { "type": "number" },
+        "stock": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "price", "stock", "createdAt"]
+    },
+    "BookSale": {
+      "title": "BookSale",
+      "description": "Book sale transaction.",
+      "type": "object",
+      "properties": {
+        "bookId": { "type": "string" },
+        "bookTitle": { "type": "string" },
+        "customerName": { "type": "string" },
+        "receiptNumber": { "type": "string" },
+        "price": { "type": "number" },
+        "quantity": { "type": "number" },
+        "discount": { "type": "number" },
+        "total": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["bookId", "bookTitle", "customerName", "receiptNumber", "price", "quantity", "discount", "total", "createdAt", "createdBy"]
+    },
+    "TeacherReplacement": {
+      "title": "TeacherReplacement",
+      "description": "Teacher replacement/substitution record.",
+      "type": "object",
+      "properties": {
+        "replacingTeacherId": { "type": "string" },
+        "replacingTeacherName": { "type": "string" },
+        "replacedTeacherId": { "type": "string" },
+        "replacedTeacherName": { "type": "string" },
+        "classLevel": { "type": "string" },
+        "classType": { "type": "string" },
+        "schedule": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "progressReport": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["replacingTeacherId", "replacingTeacherName", "replacedTeacherId", "replacedTeacherName", "classLevel", "classType", "schedule", "date", "createdAt", "createdBy"]
+    },
+    "ReplacementRequest": {
+      "title": "ReplacementRequest",
+      "description": "Teacher request for a replacement.",
+      "type": "object",
+      "properties": {
+        "teacherId": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "reason": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "resolved"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["teacherId", "teacherName", "reason", "status", "createdAt"]
+    },
+    "ScheduleChange": {
+      "title": "ScheduleChange",
+      "description": "Student schedule change record.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "oldShift": { "type": "string" },
+        "newShift": { "type": "string" },
+        "oldLevel": { "type": "string" },
+        "newLevel": { "type": "string" },
+        "paidForChange": { "type": "boolean" },
+        "paymentAmount": { "type": "number" },
+        "receiptNumber": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["studentId", "studentName", "oldShift", "newShift", "oldLevel", "newLevel", "paidForChange", "paymentAmount", "createdAt", "createdBy"]
+    },
+    "Grade": {
+      "title": "Grade",
+      "description": "Student grade record for a course.",
+      "type": "object",
+      "properties": {
+        "courseId": { "type": "string" },
+        "courseName": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "teacherId": { "type": "string" },
+        "midtermAttendance": { "type": "number" },
+        "midtermParticipation": { "type": "number" },
+        "midtermOral": { "type": "number" },
+        "midtermWritten": { "type": "number" },
+        "midtermPractices": { "type": "number" },
+        "midtermTotal": { "type": "number" },
+        "finalAttendance": { "type": "number" },
+        "finalParticipation": { "type": "number" },
+        "finalOral": { "type": "number" },
+        "finalWritten": { "type": "number" },
+        "finalPractices": { "type": "number" },
+        "finalTotal": { "type": "number" },
+        "average": { "type": "number" },
+        "comments": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["courseId", "courseName", "studentId", "studentName", "teacherId", "midtermAttendance", "midtermParticipation", "midtermOral", "midtermWritten", "midtermPractices", "midtermTotal", "finalAttendance", "finalParticipation", "finalOral", "finalWritten", "finalPractices", "finalTotal", "average", "createdAt"]
+    },
+    "ClassReport": {
+      "title": "ClassReport",
+      "description": "Teacher class report.",
+      "type": "object",
+      "properties": {
+        "teacherId": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "courseId": { "type": "string" },
+        "courseName": { "type": "string" },
+        "type": { "type": "string", "enum": ["weekday", "saturday", "custom"] },
+        "date": { "type": "string", "format": "date-time" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "totalHours": { "type": "number" },
+        "progress": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] }
+      },
+      "required": ["teacherId", "type", "date", "progress", "status"]
+    },
+    "StudentStatus": {
+      "title": "StudentStatus",
+      "description": "Defines student status and associated fee.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "fee": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "fee", "createdAt"]
+    },
+    "Level": {
+      "title": "Level",
+      "description": "Educational levels offered by the institute.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "createdAt"]
+    },
+    "BookStockLog": {
+      "title": "BookStockLog",
+      "description": "Log of stock increases and inventory adjustments for books.",
+      "type": "object",
+      "properties": {
+        "bookId": { "type": "string" },
+        "bookTitle": { "type": "string" },
+        "quantityAdded": { "type": "number" },
+        "previousStock": { "type": "number" },
+        "newStock": { "type": "number" },
+        "notes": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "creatorName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["bookId", "bookTitle", "quantityAdded", "previousStock", "newStock", "createdBy", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles."
+    },
+    "/courses/{courseId}": {
+      "schema": "Course",
+      "description": "Course information."
+    },
+    "/announcements/{announcementId}": {
+      "schema": "Announcement",
+      "description": "General announcements."
+    },
+    "/enrollments/{enrollmentId}": {
+      "schema": "Enrollment",
+      "description": "Student enrollments."
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Student payments."
+    },
+    "/books/{bookId}": {
+      "schema": "Book",
+      "description": "Book inventory."
+    },
+    "/bookSales/{saleId}": {
+      "schema": "BookSale",
+      "description": "Book sales transactions."
+    },
+    "/bookStockHistory/{logId}": {
+      "schema": "BookStockLog",
+      "description": "History of stock increases for books."
+    },
+    "/teacherReplacements/{replacementId}": {
+      "schema": "TeacherReplacement",
+      "description": "Teacher replacement records."
+    },
+    "/replacementRequests/{requestId}": {
+      "schema": "ReplacementRequest",
+      "description": "Teacher replacement requests."
+    },
+    "/scheduleChanges/{changeId}": {
+      "schema": "ScheduleChange",
+      "description": "Student schedule change history."
+    },
+    "/grades/{gradeId}": {
+      "schema": "Grade",
+      "description": "Student grades."
+    },
+    "/classReports/{reportId}": {
+      "schema": "ClassReport",
+      "description": "Teacher class reports."
+    },
+    "/statuses/{statusId}": {
+      "schema": "StudentStatus",
+      "description": "Student status definitions."
+    },
+    "/statusHistory/{historyId}": {
+      "schema": "StatusHistory",
+      "description": "History of student status changes."
+    },
+    "/levels/{levelId}": {
+      "schema": "Level",
+      "description": "Course level definitions."
+    }
+  }
+}

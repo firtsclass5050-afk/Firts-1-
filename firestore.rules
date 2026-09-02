@@ -1,0 +1,416 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Document ID: userId (uid)
+    // Fields:
+    //   - uid: string (required, immutable)
+    //   - email: string (required, format: email)
+    //   - displayName: string (optional)
+    //   - role: string (required, enum: ["admin", "teacher", "student", "master", "pending"])
+    //   - photoURL: string (optional)
+    //   - ci: string (optional)
+    //   - birthDate: string (optional)
+    //   - phoneNumber: string (optional)
+    //   - requestedRole: string (optional, enum: ["teacher", "admin"])
+    //   - status: string (optional, enum: ["pending", "active", "rejected"])
+    //   - createdAt: timestamp (optional)
+    //
+    // Collection: courses
+    // Document ID: courseId
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - level: string (required)
+    //   - teacherId: string (required)
+    //   - schedule: string (required)
+    //   - studentIds: list (optional)
+    //
+    // Collection: announcements
+    // Document ID: announcementId
+    // Fields:
+    //   - title: string (required)
+    //   - content: string (required)
+    //   - authorId: string (required)
+    //   - createdAt: timestamp (required)
+    //   - targetRole: string (required, enum: ["all", "teacher", "student"])
+    //
+    // Collection: enrollments
+    // Document ID: enrollmentId
+    // Fields:
+    //   - studentCode: string (required)
+    //   - firstName: string (required)
+    //   - lastName: string (required)
+    //   - birthDate: string (required)
+    //   - isAdult: bool (required)
+    //   - idCard: string (required)
+    //   - issuedIn: string (required)
+    //   - cellphone: string (required)
+    //   - address: string (required)
+    //   - shift: string (required)
+    //   - modality: string (required)
+    //   - level: string (required)
+    //   - course: string (required)
+    //   - amount: number (required)
+    //   - branch: string (required)
+    //   - createdAt: timestamp (required)
+    //   - createdBy: string (required)
+    //
+    // Collection: payments
+    // Document ID: paymentId
+    // Fields:
+    //   - studentId: string (required)
+    //   - studentName: string (required)
+    //   - year: string (required)
+    //   - monthToPay: string (required)
+    //   - monthlyAmount: number (required)
+    //   - monthsInAdvance: number (required)
+    //   - plannedPaymentDate: string (required)
+    //   - taxId: string (required)
+    //   - authorizationNumber: string (required)
+    //   - taxName: string (required)
+    //   - receiptNumber: string (required)
+    //   - totalToPay: number (required)
+    //   - amountReceived: number (required)
+    //   - change: number (required)
+    //   - createdAt: timestamp (required)
+    //   - createdBy: string (required)
+    //
+    // Collection: books
+    // Document ID: bookId
+    // Fields:
+    //   - title: string (required)
+    //   - price: number (required)
+    //   - stock: number (required)
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: bookSales
+    // Document ID: saleId
+    // Fields:
+    //   - bookId: string (required)
+    //   - bookTitle: string (required)
+    //   - customerName: string (required)
+    //   - receiptNumber: string (required)
+    //   - price: number (required)
+    //   - quantity: number (required)
+    //   - total: number (required)
+    //   - createdAt: timestamp (required)
+    //   - createdBy: string (required)
+    //
+    // Collection: grades
+    // Document ID: gradeId
+    // Fields:
+    //   - courseId: string (required)
+    //   - courseName: string (required)
+    //   - studentId: string (required)
+    //   - studentName: string (required)
+    //   - teacherId: string (required)
+    //   - midtermAttendance: number (required)
+    //   - midtermParticipation: number (required)
+    //   - midtermOral: number (required)
+    //   - midtermWritten: number (required)
+    //   - midtermPractices: number (required)
+    //   - midtermTotal: number (required)
+    //   - finalAttendance: number (required)
+    //   - finalParticipation: number (required)
+    //   - finalOral: number (required)
+    //   - finalWritten: number (required)
+    //   - finalPractices: number (required)
+    //   - finalTotal: number (required)
+    //   - average: number (required)
+    //   - comments: string (optional)
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: classReports
+    // Document ID: reportId
+    // Fields:
+    //   - teacherId: string (required)
+    //   - teacherName: string (optional)
+    //   - courseId: string (optional)
+    //   - courseName: string (optional)
+    //   - type: string (required, enum: ["weekday", "saturday", "custom"])
+    //   - date: timestamp (required)
+    //   - progress: string (required, minLength: 5)
+    //   - status: string (required, enum: ["pending", "approved", "rejected"])
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "joanpablex@gmail.com" ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'master']));
+    }
+
+    function isMaster() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "joanpablex@gmail.com" ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'master'));
+    }
+
+    function isTeacher() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "joanpablex@gmail.com" ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['teacher', 'master']));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['admin', 'teacher', 'student', 'master', 'pending'] &&
+             (!('displayName' in data) || data.displayName is string) &&
+             (!('photoURL' in data) || data.photoURL is string) &&
+             (!('ci' in data) || data.ci is string) &&
+             (!('birthDate' in data) || data.birthDate is string) &&
+             (!('phoneNumber' in data) || data.phoneNumber is string) &&
+             (!('requestedRole' in data) || data.requestedRole in ['teacher', 'admin']) &&
+             (!('status' in data) || data.status in ['pending', 'active', 'rejected']) &&
+             (!('createdAt' in data) || data.createdAt is timestamp);
+    }
+
+    function isValidCourse(data) {
+      return data.keys().hasAll(['name', 'level', 'teacherId']) &&
+             data.name is string && data.name.size() < 100 &&
+             data.level is string &&
+             data.teacherId is string;
+    }
+
+    function isValidAnnouncement(data) {
+      return data.keys().hasAll(['title', 'content', 'authorId', 'createdAt', 'targetRole']) &&
+             data.title is string && data.title.size() < 200 &&
+             data.content is string && data.content.size() < 5000 &&
+             data.targetRole in ['all', 'teacher', 'student'];
+    }
+
+    function isValidEnrollment(data) {
+      return data.keys().hasAll(['studentCode', 'firstName', 'lastName', 'birthDate', 'isAdult', 'idCard', 'issuedIn', 'cellphone', 'address', 'shift', 'modality', 'level', 'course', 'amount', 'branch', 'createdAt', 'createdBy']) &&
+             data.studentCode is string && data.firstName is string && data.lastName is string &&
+             data.isAdult is bool &&
+             data.amount is number && data.amount >= 0 &&
+             (!('statusId' in data) || data.statusId is string);
+    }
+
+    function isValidStatus(data) {
+      return data.keys().hasAll(['name', 'fee', 'createdAt']) &&
+             data.name is string && data.name.size() < 100 &&
+             data.fee is number && data.fee >= 0;
+    }
+
+    function isValidLevel(data) {
+      return data.keys().hasAll(['name', 'createdAt']) &&
+             data.name is string && data.name.size() < 100 &&
+             (!('description' in data) || data.description is string);
+    }
+
+    function isValidPayment(data) {
+      return data.keys().hasAll(['studentId', 'studentName', 'year', 'monthToPay', 'monthlyAmount', 'receiptNumber', 'totalToPay', 'amountReceived', 'createdAt', 'createdBy']) &&
+             data.studentId is string && data.studentName is string &&
+             data.monthlyAmount is number && data.totalToPay is number && data.amountReceived is number;
+    }
+
+    function isValidBook(data) {
+      return data.keys().hasAll(['title', 'price', 'stock']) &&
+             data.title is string && data.title.size() < 200 &&
+             data.price is number && data.price >= 0 &&
+             data.stock is number && data.stock >= 0 &&
+             (!('createdAt' in data) || data.createdAt is timestamp);
+    }
+
+    function isValidBookStockLog(data) {
+      return data.keys().hasAll(['bookId', 'bookTitle', 'quantityAdded', 'previousStock', 'newStock', 'createdBy', 'createdAt']) &&
+             data.bookId is string && data.bookTitle is string &&
+             data.quantityAdded is number && data.quantityAdded > 0 &&
+             data.previousStock is number && data.previousStock >= 0 &&
+             data.newStock is number && data.newStock >= 0 &&
+             data.createdBy is string &&
+             (!('creatorName' in data) || data.creatorName is string) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() < 1000));
+    }
+
+    function isValidBookSale(data) {
+      return data.keys().hasAll(['bookId', 'bookTitle', 'customerName', 'receiptNumber', 'price', 'quantity', 'discount', 'total', 'createdAt', 'createdBy']) &&
+             data.bookId is string && data.bookTitle is string &&
+             data.customerName is string && data.customerName.size() < 200 &&
+             data.receiptNumber is string &&
+             data.price is number && data.quantity is number && data.discount is number && data.total is number;
+    }
+
+    function isValidAttendance(data) {
+      return data.keys().hasAll(['courseId', 'teacherId', 'date', 'records']) &&
+             data.courseId is string &&
+             data.teacherId is string &&
+             data.records is list;
+    }
+
+    function isValidGrade(data) {
+      return data.keys().hasAll(['courseId', 'courseName', 'studentId', 'studentName', 'teacherId', 'midtermAttendance', 'midtermParticipation', 'midtermOral', 'midtermWritten', 'midtermPractices', 'midtermTotal', 'finalAttendance', 'finalParticipation', 'finalOral', 'finalWritten', 'finalPractices', 'finalTotal', 'average', 'createdAt']) &&
+             data.courseId is string && data.courseName is string && data.courseName.size() < 200 &&
+             data.studentId is string && data.studentName is string && data.studentName.size() < 200 &&
+             data.teacherId is string &&
+             data.midtermAttendance is number && data.midtermAttendance >= 0 &&
+             data.midtermParticipation is number && data.midtermParticipation >= 0 &&
+             data.midtermOral is number && data.midtermOral >= 0 &&
+             data.midtermWritten is number && data.midtermWritten >= 0 &&
+             data.midtermPractices is number && data.midtermPractices >= 0 &&
+             data.midtermTotal is number && data.midtermTotal >= 0 &&
+             data.finalAttendance is number && data.finalAttendance >= 0 &&
+             data.finalParticipation is number && data.finalParticipation >= 0 &&
+             data.finalOral is number && data.finalOral >= 0 &&
+             data.finalWritten is number && data.finalWritten >= 0 &&
+             data.finalPractices is number && data.finalPractices >= 0 &&
+             data.finalTotal is number && data.finalTotal >= 0 &&
+             data.average is number && data.average >= 0 &&
+             data.createdAt is timestamp &&
+             (!('comments' in data) || (data.comments is string && data.comments.size() < 5000));
+    }
+
+    function isValidClassReport(data) {
+      return data.keys().hasAll(['teacherId', 'type', 'date', 'progress', 'status']) &&
+             data.teacherId is string && data.type in ['weekday', 'saturday', 'custom'] &&
+             data.progress is string &&
+             data.status in ['pending', 'approved', 'rejected', 'submitted'] &&
+             (!('teacherName' in data) || data.teacherName is string) &&
+             (!('courseId' in data) || data.courseId is string) &&
+             (!('courseName' in data) || data.courseName is string) &&
+             (!('level' in data) || data.level is string) &&
+             (!('month' in data) || data.month is string) &&
+             (!('isRegular' in data) || data.isRegular is bool) &&
+             (!('isAccelerated' in data) || data.isAccelerated is bool) &&
+             (!('weekdayGrid' in data) || data.weekdayGrid is list) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp || data.updatedAt == null);
+    }
+
+    function isValidTeacherReplacement(data) {
+      return data.keys().hasAll(['replacingTeacherId', 'replacingTeacherName', 'replacedTeacherId', 'replacedTeacherName', 'classLevel', 'classType', 'schedule', 'date', 'createdAt', 'createdBy']) &&
+             data.replacingTeacherId is string && data.replacedTeacherId is string &&
+             data.classLevel is string && data.classType is string &&
+             data.schedule is string && data.createdBy is string &&
+             (!('progressReport' in data) || data.progressReport is string);
+    }
+
+    // Rules
+    match /users/{userId} {
+      allow get: if isAuthenticated();
+      allow list: if isAdmin() || (isAuthenticated() && (resource.data.role == 'teacher' || resource.data.role == 'master'));
+      allow create: if isAuthenticated() && (isOwner(userId) || isAdmin() || isTeacher()) && isValidUser(request.resource.data) && (request.resource.data.role in ['student', 'pending'] || isAdmin());
+      allow update: if isAdmin() || (isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin()));
+      allow delete: if isAdmin();
+    }
+
+    match /courses/{courseId} {
+      allow read: if isAuthenticated();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || isTeacher();
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin() || isTeacher();
+    }
+
+    match /enrollments/{enrollmentId} {
+      allow read: if isAuthenticated();
+      allow create: if (isAdmin() || isTeacher()) && isValidEnrollment(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /statusHistory/{historyId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidStatusHistory(request.resource.data);
+      allow update, delete: if false;
+    }
+
+    match /statuses/{statusId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin() && isValidStatus(request.resource.data);
+    }
+
+    function isValidStatusHistory(data) {
+      return data.keys().hasAll(['studentId', 'oldStatusId', 'newStatusId', 'changedBy', 'changedAt']) &&
+             data.studentId is string &&
+             data.changedBy is string;
+    }
+
+    match /levels/{levelId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin() && isValidLevel(request.resource.data);
+    }
+
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated();
+      allow create: if (isAdmin() || isTeacher()) && isValidPayment(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /books/{bookId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin() || isTeacher();
+    }
+
+    match /bookStockHistory/{logId} {
+      allow read: if isAuthenticated();
+      allow create: if (isAdmin() || isTeacher()) && isValidBookStockLog(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /bookSales/{saleId} {
+      allow read: if isAuthenticated();
+      allow create: if (isAdmin() || isTeacher()) && isValidBookSale(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /attendance/{attendanceId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if (isAdmin() || isTeacher()) && isValidAttendance(request.resource.data);
+    }
+
+    match /grades/{gradeId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if (isAdmin() || isTeacher()) && isValidGrade(request.resource.data);
+    }
+
+    match /classReports/{reportId} {
+      allow read: if isAdmin() || (isTeacher() && resource.data.teacherId == request.auth.uid);
+      allow create: if (isAdmin() || isTeacher()) && isValidClassReport(request.resource.data);
+      allow update, delete: if isAdmin() || (isTeacher() && resource.data.teacherId == request.auth.uid);
+    }
+
+    match /teacherReplacements/{replacementId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /replacementRequests/{requestId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher();
+      allow update, delete: if isAdmin();
+    }
+
+    match /scheduleChanges/{changeId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

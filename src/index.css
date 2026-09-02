@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bordeaux: #800020;
+  --color-bordeaux-dark: #5a0016;
+  --color-orange-primary: #FF8C00;
+  --color-orange-light: #FFA500;
+  
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-stone-50 text-stone-900 font-bold;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-black;
+  }
+
+  input, textarea, select, button {
+    @apply font-bold;
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-white/10 rounded-full;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-white/20;
+  }
+
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    
+    aside, nav, header, .lg\:hidden, .fixed.inset-0.bg-black\/50 {
+      display: none !important;
+    }
+
+    body, html {
+      background: white !important;
+      color: black !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+
+    main {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      position: static !important;
+    }
+
+    .print-area {
+      display: block !important;
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Hide other sections if they are siblings of print-area */
+    .print-area ~ * {
+      display: none !important;
+    }
+    
+    /* Ensure charts and tables are visible */
+    canvas, .recharts-responsive-container {
+      max-width: 100% !important;
+      height: 300px !important;
+    }
+
+    table {
+      width: 100% !important;
+      border-collapse: collapse !important;
+    }
+
+    th, td {
+      border: 1px solid #e5e7eb !important;
+    }
+  }
+}
